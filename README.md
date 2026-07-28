@@ -1,12 +1,14 @@
 # Community Engagement Analytics System
 
+**Status:** Initial README (draft). Contributions welcome.
+
 ## Capstone Project
 
 ### Project Idea
 
-Community organizations conduct multiple programs such as workshops, awareness campaigns, training sessions, and volunteer events. However, they often struggle to understand which activities receive the highest participation and create the greatest impact.
+Community organizations conduct multiple programs such as workshops, awareness campaigns, training sessions, and volunteer events. However, they often struggle to understand which activities receive the most engagement and how to improve participation.
 
-The Community Engagement Analytics System is a web-based application that collects, manages, and analyzes engagement data. It provides dashboards and reports that help organizations identify successful events, understand participant behavior, and make better decisions for future programs.
+The Community Engagement Analytics System is a web-based application that collects, manages, and analyzes engagement data. It provides dashboards and reports that help organizations identify successful activities and areas for improvement.
 
 ---
 
@@ -66,3 +68,9 @@ The Community Engagement Analytics System is a web-based application that collec
 - Complete documentation
 - Prepare presentation
 - Record project demonstration
+
+---
+
+## Contributors
+
+- @ManishAravinth10
