@@ -2,6 +2,15 @@
 
 **Status:** Initial README (draft). Contributions welcome.
 
+## Mock UX Design
+
+Figma Link:
+https://www.figma.com/design/3gFczvtn6FtBrjWclOeh7g/UI--UX-Community-Connect?node-id=3-486&t=2gOafFU8gmTLWRmJ-1
+
+This mock UX demonstrates the application's primary screens,
+navigation flow, and major user journeys.
+
+
 ## Capstone Project
 
 ### Project Idea
