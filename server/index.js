@@ -12,6 +12,8 @@ app.use(express.json());
 
 // Import User model
 const User = require("./models/User");
+// Import Program model
+const Program = require("./models/Program");
 
 // Connect to MongoDB
 mongoose
@@ -70,3 +72,14 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
+// POST API - Create a program
+app.post("/api/programs", async (req, res) => {
+  try {
+    const program = new Program(req.body);
+    const savedProgram = await program.save();
+
+    res.status(201).json(savedProgram);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
