@@ -83,3 +83,23 @@ app.post("/api/programs", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
+
+// PUT API - Update a program
+app.put("/api/programs/:id", async (req, res) => {
+  try {
+    const updatedProgram = await Program.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProgram) {
+      return res.status(404).json({ message: "Program not found" });
+    }
+
+    res.status(200).json(updatedProgram);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
