@@ -15,6 +15,7 @@ const User = require("./models/User");
 // Import Program model
 const Program = require("./models/Program");
 
+const Engagement = require("./models/Engagement");
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
@@ -125,6 +126,35 @@ app.delete("/api/programs/:id", async (req, res) => {
     res.status(200).json({
       message: "Program deleted successfully",
     });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// GET API - Read engagements with related User and Program
+app.get("/api/engagements", async (req, res) => {
+  try {
+    const engagements = await Engagement.find()
+      .populate("user")
+      .populate("program");
+
+    res.status(200).json(engagements);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST API - Create an engagement
+app.post("/api/engagements", async (req, res) => {
+  try {
+    const engagement = new Engagement(req.body);
+    const savedEngagement = await engagement.save();
+
+    const populatedEngagement = await Engagement.findById(savedEngagement._id)
+      .populate("user")
+      .populate("program");
+
+    res.status(201).json(populatedEngagement);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
