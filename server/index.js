@@ -103,3 +103,29 @@ app.put("/api/programs/:id", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+// GET API - Read all programs
+app.get("/api/programs", async (req, res) => {
+  try {
+    const programs = await Program.find();
+    res.status(200).json(programs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE API - Delete a program
+app.delete("/api/programs/:id", async (req, res) => {
+  try {
+    const deletedProgram = await Program.findByIdAndDelete(req.params.id);
+
+    if (!deletedProgram) {
+      return res.status(404).json({ message: "Program not found" });
+    }
+
+    res.status(200).json({
+      message: "Program deleted successfully",
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
