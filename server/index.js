@@ -1,8 +1,10 @@
+
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 dotenv.config();
 
@@ -20,7 +22,38 @@ const Program = require("./models/Program");
 // Import Engagement model
 const Engagement = require("./models/Engagement");
 
-// Connect to MongoDB
+// ======================================================
+// JWT AUTHENTICATION MIDDLEWARE
+// ======================================================
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({
+      message: "Access denied. Token required.",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      message: "Invalid or expired token.",
+    });
+  }
+};
+
+// ======================================================
+// CONNECT TO MONGODB
+// ======================================================
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -149,7 +182,7 @@ app.post("/api/auth/register", async (req, res) => {
 });
 
 // ======================================================
-// AUTHENTICATION - LOGIN
+// AUTHENTICATION - LOGIN WITH JWT
 // ======================================================
 
 // POST API - Login
@@ -187,9 +220,28 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
 
+    // ==================================================
+    // GENERATE JWT TOKEN
+    // ==================================================
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+
     // Login successful
     res.status(200).json({
       message: "Login successful",
+
+      // Send JWT token to frontend
+      token,
 
       user: {
         id: user._id,
@@ -254,7 +306,8 @@ app.put("/api/programs/:id", async (req, res) => {
 });
 
 // GET API - Read all programs
-app.get("/api/programs", async (req, res) => {
+// JWT PROTECTED ROUTE
+app.get("/api/programs", authenticateToken, async (req, res) => {
   try {
     const programs = await Program.find();
 
