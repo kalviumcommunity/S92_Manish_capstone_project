@@ -4,11 +4,14 @@ function ProgramTable() {
   const [programs, setPrograms] = useState([]);
   const [editingProgram, setEditingProgram] = useState(null);
 
-  // Get programs from backend
   const fetchPrograms = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/programs");
+      const response = await fetch(
+        "http://localhost:5000/api/programs"
+      );
+
       const data = await response.json();
+
       setPrograms(data);
     } catch (error) {
       console.error("Error fetching programs:", error);
@@ -19,7 +22,6 @@ function ProgramTable() {
     fetchPrograms();
   }, []);
 
-  // Delete program
   const handleDelete = async (id) => {
     try {
       const response = await fetch(
@@ -39,7 +41,6 @@ function ProgramTable() {
     }
   };
 
-  // Update program
   const handleUpdate = async (event) => {
     event.preventDefault();
 
@@ -92,8 +93,11 @@ function ProgramTable() {
           {programs.map((program) => (
             <tr key={program._id}>
               <td>{program.name}</td>
+
               <td>{program.category}</td>
+
               <td>{program.capacity}</td>
+
               <td>{program.status}</td>
 
               <td>
