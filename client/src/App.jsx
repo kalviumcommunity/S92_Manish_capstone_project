@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 
+import Login from "./components/login";
 import Programs from "./Programs";
 import Participants from "./Participants";
 import Analytics from "./Analytics";
@@ -9,81 +10,44 @@ import UploadData from "./upload";
 import HelpCenter from "./HelpCenter";
 
 function App() {
-  // ================= AUTHENTICATION =================
+  // =========================================================
+  // AUTHENTICATION
+  // =========================================================
+
+  // IMPORTANT:
+  // Login is now based on JWT token, not only username.
   const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("username")
+    !!localStorage.getItem("token")
   );
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginMessage, setLoginMessage] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  // =========================================================
+  // APP STATE
+  // =========================================================
 
-  // ================= APP STATE =================
   const [activePage, setActivePage] = useState("Dashboard");
   const [showHelp, setShowHelp] = useState(false);
 
-  // ================= LOGIN =================
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // =========================================================
+  // LOGIN SUCCESS
+  // =========================================================
 
-    setLoginMessage("");
-
-    if (!username || !password) {
-      setLoginMessage("Please enter username and password");
-      return;
-    }
-
-    try {
-      setIsLoggingIn(true);
-
-      const response = await fetch(
-        "http://localhost:5000/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setLoginMessage(data.message || "Invalid username or password");
-        setIsLoggingIn(false);
-        return;
-      }
-
-      // Save logged-in username
-      localStorage.setItem("username", data.user.username);
-
-      setIsLoggedIn(true);
-      setLoginMessage("");
-      setIsLoggingIn(false);
-    } catch (error) {
-      console.error("Login error:", error);
-
-      setLoginMessage(
-        "Unable to connect to server. Make sure the backend is running."
-      );
-
-      setIsLoggingIn(false);
-    }
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    setActivePage("Dashboard");
   };
 
-  // ================= LOGOUT =================
-  const handleLogout = () => {
-    localStorage.removeItem("username");
+  // =========================================================
+  // LOGOUT
+  // =========================================================
 
+  const handleLogout = () => {
+    // Remove all authentication information
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("user");
+
+    // Return to login page
     setIsLoggedIn(false);
-    setUsername("");
-    setPassword("");
-    setLoginMessage("");
     setActivePage("Dashboard");
   };
 
@@ -92,153 +56,15 @@ function App() {
   // =========================================================
 
   if (!isLoggedIn) {
-    return (
-      <div className="login-page">
-
-        {/* LEFT SIDE */}
-        <div className="login-left">
-
-          <div className="login-art">
-            <div className="art-circle circle-one"></div>
-            <div className="art-circle circle-two"></div>
-            <div className="art-circle circle-three"></div>
-
-            <div className="art-center">
-              <div className="art-core">CC</div>
-
-              <div className="art-orbit orbit-one"></div>
-              <div className="art-orbit orbit-two"></div>
-              <div className="art-orbit orbit-three"></div>
-            </div>
-          </div>
-
-          <div className="login-brand-content">
-            <h1>Community Connect</h1>
-
-            <p>
-              Sign in to manage programs, collaborate with your team,
-              and keep your community data in one place.
-            </p>
-
-            <div className="secure-badge">
-              🔒 Secure access for your organization
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT SIDE */}
-        <div className="login-right">
-
-          <div className="login-form-container">
-
-            <div className="login-logo">
-              C
-            </div>
-
-            <h2>Welcome back</h2>
-
-            <p className="login-description">
-              Sign in to manage your programs & data
-            </p>
-
-            <form onSubmit={handleLogin}>
-
-              {/* USERNAME */}
-              <div className="login-field">
-
-                <label>Username</label>
-
-                <div className="input-wrapper">
-
-                  <span className="input-icon">
-                    ◉
-                  </span>
-
-                  <input
-                    type="text"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                  />
-
-                </div>
-              </div>
-
-              {/* PASSWORD */}
-              <div className="login-field">
-
-                <label>Password</label>
-
-                <div className="input-wrapper">
-
-                  <span className="input-icon">
-                    🔒
-                  </span>
-
-                  <input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
-
-                </div>
-              </div>
-
-              {/* OPTIONS */}
-              <div className="login-options">
-
-                <label className="remember-me">
-                  <input type="checkbox" />
-                  <span>Remember me</span>
-                </label>
-
-                <button
-                  type="button"
-                  className="forgot-password"
-                  onClick={() =>
-                    setLoginMessage(
-                      "Please contact your organization administrator to reset your password."
-                    )
-                  }
-                >
-                  Forgot password?
-                </button>
-
-              </div>
-
-              {/* LOGIN BUTTON */}
-              <button
-                type="submit"
-                className="login-button"
-                disabled={isLoggingIn}
-              >
-                {isLoggingIn
-                  ? "Signing in..."
-                  : "Sign In to Platform →"}
-              </button>
-
-              {/* ERROR / SUCCESS MESSAGE */}
-              {loginMessage && (
-                <div className="login-message">
-                  {loginMessage}
-                </div>
-              )}
-
-            </form>
-
-            <p className="signup-text">
-              Don't have an account?
-              <span> Sign Up</span>
-            </p>
-
-          </div>
-        </div>
-      </div>
-    );
+    return <Login onLogin={handleLogin} />;
   }
+
+  // =========================================================
+  // GET LOGGED-IN USER
+  // =========================================================
+
+  const loggedInUsername =
+    localStorage.getItem("username") || "Admin";
 
   // =========================================================
   // DASHBOARD DATA
@@ -309,9 +135,13 @@ function App() {
   return (
     <div className="app">
 
-      {/* ================= SIDEBAR ================= */}
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
       <aside className="sidebar">
+
+        {/* BRAND */}
 
         <div className="brand">
 
@@ -326,14 +156,20 @@ function App() {
 
         </div>
 
+        {/* WORKSPACE */}
+
         <div className="workspace">
           <span className="workspace-dot"></span>
           Community Analytics
         </div>
 
-        {/* ================= NAVIGATION ================= */}
+        {/* ===================================================
+            NAVIGATION
+        =================================================== */}
 
         <nav className="navigation">
+
+          {/* DASHBOARD */}
 
           <button
             className={
@@ -346,6 +182,8 @@ function App() {
             <span>⌂</span>
             Dashboard
           </button>
+
+          {/* PROGRAMS */}
 
           <button
             className={
@@ -360,6 +198,8 @@ function App() {
             <small>14</small>
           </button>
 
+          {/* PARTICIPANTS */}
+
           <button
             className={
               activePage === "Participants"
@@ -371,6 +211,8 @@ function App() {
             <span>♙</span>
             Participants
           </button>
+
+          {/* ANALYTICS */}
 
           <button
             className={
@@ -384,6 +226,8 @@ function App() {
             Analytics
           </button>
 
+          {/* REPORTS */}
+
           <button
             className={
               activePage === "Reports"
@@ -396,6 +240,8 @@ function App() {
             Reports
           </button>
 
+          {/* UPLOAD DATA */}
+
           <button
             className={
               activePage === "Upload Data"
@@ -407,10 +253,12 @@ function App() {
             <span>↑</span>
             Upload Data
           </button>
-   
+
         </nav>
 
-        {/* ================= SIDEBAR BOTTOM ================= */}
+        {/* ===================================================
+            SIDEBAR BOTTOM
+        =================================================== */}
 
         <div className="sidebar-bottom">
 
@@ -421,6 +269,11 @@ function App() {
             onClick={() => setShowHelp(true)}
             role="button"
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                setShowHelp(true);
+              }
+            }}
           >
 
             <div className="help-icon">
@@ -450,12 +303,18 @@ function App() {
             </div>
 
             <div className="profile-info">
+
               <strong>
-                {localStorage.getItem("username") || "Admin"}
+                {loggedInUsername}
               </strong>
 
-              <span>Community Manager</span>
+              <span>
+                Community Manager
+              </span>
+
             </div>
+
+            {/* LOGOUT */}
 
             <button
               className="logout-button"
@@ -470,11 +329,15 @@ function App() {
 
       </aside>
 
-      {/* ================= MAIN CONTENT ================= */}
+      {/* =====================================================
+          MAIN CONTENT
+      ===================================================== */}
 
       <main className="main">
 
-        {/* PROGRAMS */}
+        {/* ===================================================
+            PROGRAMS
+        =================================================== */}
 
         {activePage === "Programs" ? (
 
@@ -499,14 +362,24 @@ function App() {
         ) : (
 
           <>
-            {/* ================= TOP BAR ================= */}
+            {/* =================================================
+                TOP BAR
+            ================================================= */}
 
             <header className="topbar">
 
               <div className="breadcrumb">
-                <span>Community Connect</span>
+
+                <span>
+                  Community Connect
+                </span>
+
                 <b>/</b>
-                <strong>{activePage}</strong>
+
+                <strong>
+                  {activePage}
+                </strong>
+
               </div>
 
               <div className="top-actions">
@@ -517,16 +390,22 @@ function App() {
                 </button>
 
                 <button className="date-button">
+
                   <span>▣</span>
+
                   Sep 2026
+
                   <b>⌄</b>
+
                 </button>
 
               </div>
 
             </header>
 
-            {/* ================= PAGE HEADER ================= */}
+            {/* =================================================
+                PAGE HEADER
+            ================================================= */}
 
             <section className="page-header">
 
@@ -537,7 +416,7 @@ function App() {
                 </p>
 
                 <h1>
-                  Good morning, Admin 👋
+                  Good morning, {loggedInUsername} 👋
                 </h1>
 
                 <p className="subtitle">
@@ -560,7 +439,9 @@ function App() {
 
             </section>
 
-            {/* ================= KPI CARDS ================= */}
+            {/* =================================================
+                KPI CARDS
+            ================================================= */}
 
             <section className="stats-grid">
 
@@ -720,9 +601,11 @@ function App() {
                 <div className="satisfaction">
 
                   <div className="satisfaction-circle">
+
                     <span>
                       92
                     </span>
+
                   </div>
 
                   <div>
@@ -743,7 +626,9 @@ function App() {
 
             </section>
 
-            {/* ================= CHART + CATEGORY ================= */}
+            {/* =================================================
+                CHART + CATEGORY
+            ================================================= */}
 
             <section className="analytics-grid">
 
@@ -993,7 +878,9 @@ function App() {
 
             </section>
 
-            {/* ================= PROGRAMS + ACTIVITY ================= */}
+            {/* =================================================
+                PROGRAMS + ACTIVITY
+            ================================================= */}
 
             <section className="bottom-grid">
 
@@ -1164,7 +1051,9 @@ function App() {
 
             </section>
 
-            {/* ================= FOOTER ================= */}
+            {/* =================================================
+                FOOTER
+            ================================================= */}
 
             <footer>
 
@@ -1184,7 +1073,9 @@ function App() {
 
       </main>
 
-      {/* ================= HELP CENTER ================= */}
+      {/* =====================================================
+          HELP CENTER
+      ===================================================== */}
 
       {showHelp && (
         <HelpCenter

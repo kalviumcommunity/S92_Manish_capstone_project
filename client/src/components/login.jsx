@@ -36,8 +36,22 @@ function Login({ onLogin }) {
         return;
       }
 
+      // ==================================================
+      // JWT TOKEN STORAGE
+      // ==================================================
+
+      // Store JWT token received from backend
+      localStorage.setItem("token", data.token);
+
+      // Store logged-in user's username
       localStorage.setItem("username", data.user.username);
 
+      // Store user information
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      console.log("JWT token received successfully");
+
+      // Login successful
       onLogin();
     } catch (error) {
       console.error("Login error:", error);
@@ -162,10 +176,13 @@ function Login({ onLogin }) {
 
           <p className="signup-text">
             Don't have an account?
+
             <button
               type="button"
               onClick={() =>
-                setMessage("Please contact your organization administrator")
+                setMessage(
+                  "Please contact your organization administrator"
+                )
               }
             >
               Sign Up
