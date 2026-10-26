@@ -1,18 +1,39 @@
+
 import { useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  // Store the JWT and user information after successful login
+  const saveLogin = (data) => {
+    if (!data.token || !data.user) {
+      setMessage("Login failed: Invalid server response");
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.user.username || "");
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    console.log("Login successful");
+    onLogin();
+  };
+
+  // Existing username/password login
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
 
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       setMessage("Please enter username and password");
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -23,7 +44,7 @@ function Login({ onLogin }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username,
+            username: username.trim(),
             password,
           }),
         }
@@ -36,35 +57,60 @@ function Login({ onLogin }) {
         return;
       }
 
-      // ==================================================
-      // JWT TOKEN STORAGE
-      // ==================================================
-
-      // Store JWT token received from backend
-      localStorage.setItem("token", data.token);
-
-      // Store logged-in user's username
-      localStorage.setItem("username", data.user.username);
-
-      // Store user information
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      console.log("JWT token received successfully");
-
-      // Login successful
-      onLogin();
+      saveLogin(data);
     } catch (error) {
       console.error("Login error:", error);
       setMessage("Unable to connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setMessage("");
+
+    if (!credentialResponse.credential) {
+      setMessage("Google did not return a valid credential");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/google",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || "Google login failed");
+        return;
+      }
+
+      saveLogin(data);
+    } catch (error) {
+      console.error("Google login error:", error);
+      setMessage("Unable to connect to server");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-page">
-
       {/* LEFT BRANDING SECTION */}
       <div className="login-brand">
-
         <div className="brand-visual">
           <div className="orb orb-one"></div>
           <div className="orb orb-two"></div>
@@ -93,17 +139,12 @@ function Login({ onLogin }) {
             Secure access for your organization
           </div>
         </div>
-
       </div>
 
       {/* RIGHT LOGIN SECTION */}
       <div className="login-form-section">
-
         <div className="login-form-container">
-
-          <div className="login-icon">
-            C
-          </div>
+          <div className="login-icon">C</div>
 
           <h1>Welcome back</h1>
 
@@ -112,35 +153,39 @@ function Login({ onLogin }) {
           </p>
 
           <form onSubmit={handleLogin}>
-
-            <label>Email Address</label>
+            <label htmlFor="login-username">Email Address</label>
 
             <div className="input-wrapper">
               <span className="input-icon">✉</span>
 
               <input
+                id="login-username"
                 type="text"
-                placeholder="you@organization.org"
+                placeholder="Enter your username"
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                required
               />
             </div>
 
-            <label>Password</label>
+            <label htmlFor="login-password">Password</label>
 
             <div className="input-wrapper">
               <span className="input-icon">▣</span>
 
               <input
+                id="login-password"
                 type="password"
                 placeholder="••••••••••••"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
 
             <div className="login-options">
-
               <label className="remember-me">
                 <input type="checkbox" />
                 <span>Remember me</span>
@@ -155,28 +200,43 @@ function Login({ onLogin }) {
               >
                 Forgot password?
               </button>
-
             </div>
 
             <button
               type="submit"
               className="login-button"
+              disabled={loading}
             >
-              Sign In to Platform
-              <span>→</span>
+              {loading ? "Signing in..." : "Sign In to Platform"}
+              {!loading && <span>→</span>}
             </button>
-
           </form>
 
+          <div className="google-login">
+            <div className="login-divider">
+              <span>OR</span>
+            </div>
+
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() =>
+                setMessage("Google sign-in failed. Please try again.")
+              }
+              text="signin_with"
+              shape="rectangular"
+              theme="outline"
+              width="300"
+            />
+          </div>
+
           {message && (
-            <div className="login-message">
+            <div className="login-message" role="alert">
               {message}
             </div>
           )}
 
           <p className="signup-text">
-            Don't have an account?
-
+            Don't have an account?{" "}
             <button
               type="button"
               onClick={() =>
@@ -188,11 +248,8 @@ function Login({ onLogin }) {
               Sign Up
             </button>
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }
