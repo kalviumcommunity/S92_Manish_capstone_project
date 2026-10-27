@@ -63,7 +63,7 @@ app.get("/", (req, res) => {
 // ======================================================
 
 // GET all users
-app.get("/api/users", async (req, res) => {
+app.get("/api/users", authenticateToken, async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.status(200).json(users);
@@ -74,7 +74,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 // GET a single user
-app.get("/api/users/:id", async (req, res) => {
+app.get("/api/users/:id", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
 
@@ -88,10 +88,25 @@ app.get("/api/users/:id", async (req, res) => {
   }
 });
 
-// POST a user
-app.post("/api/users", async (req, res) => {
+// POST a user (JWT protected)
+app.post("/api/users", authenticateToken, async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { name, username, email, password, role } = req.body;
+
+    // Only admins may create other admins.
+    const safeRole =
+      role === "admin" && req.user.role !== "admin"
+        ? "participant"
+        : role;
+
+    const user = new User({
+      name,
+      username,
+      email,
+      role: safeRole,
+      // Never store a plain-text password.
+      password: password ? await bcrypt.hash(password, 10) : undefined,
+    });
     const savedUser = await user.save();
 
     const safeUser = await User.findById(savedUser._id).select("-password");
@@ -372,8 +387,8 @@ app.get("/api/auth/me", authenticateToken, async (req, res) => {
 // PROGRAM APIs
 // ======================================================
 
-// CREATE a program
-app.post("/api/programs", async (req, res) => {
+// CREATE a program (JWT protected)
+app.post("/api/programs", authenticateToken, async (req, res) => {
   try {
     const program = new Program(req.body);
     const savedProgram = await program.save();
@@ -384,8 +399,8 @@ app.post("/api/programs", async (req, res) => {
   }
 });
 
-// UPDATE a program
-app.put("/api/programs/:id", async (req, res) => {
+// UPDATE a program (JWT protected)
+app.put("/api/programs/:id", authenticateToken, async (req, res) => {
   try {
     const updatedProgram = await Program.findByIdAndUpdate(
       req.params.id,
@@ -413,8 +428,8 @@ app.get("/api/programs", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE a program
-app.delete("/api/programs/:id", async (req, res) => {
+// DELETE a program (JWT protected)
+app.delete("/api/programs/:id", authenticateToken, async (req, res) => {
   try {
     const deletedProgram = await Program.findByIdAndDelete(
       req.params.id
@@ -436,8 +451,8 @@ app.delete("/api/programs/:id", async (req, res) => {
 // ENGAGEMENT APIs
 // ======================================================
 
-// GET engagements with related user and program
-app.get("/api/engagements", async (req, res) => {
+// GET engagements with related user and program (JWT protected)
+app.get("/api/engagements", authenticateToken, async (req, res) => {
   try {
     const engagements = await Engagement.find()
       .populate("user")
@@ -449,8 +464,8 @@ app.get("/api/engagements", async (req, res) => {
   }
 });
 
-// CREATE an engagement
-app.post("/api/engagements", async (req, res) => {
+// CREATE an engagement (JWT protected)
+app.post("/api/engagements", authenticateToken, async (req, res) => {
   try {
     const engagement = new Engagement(req.body);
     const savedEngagement = await engagement.save();

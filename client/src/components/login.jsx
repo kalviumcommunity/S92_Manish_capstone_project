@@ -1,6 +1,10 @@
 
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
+import { API_URL } from "../api";
+
+// Google sign-in is shown only when a client ID is configured
+const googleEnabled = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -19,7 +23,6 @@ function Login({ onLogin }) {
     localStorage.setItem("username", data.user.username || "");
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    console.log("Login successful");
     onLogin();
   };
 
@@ -37,7 +40,7 @@ function Login({ onLogin }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
@@ -79,7 +82,7 @@ function Login({ onLogin }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/google",
+        `${API_URL}/api/auth/google`,
         {
           method: "POST",
           headers: {
@@ -153,7 +156,7 @@ function Login({ onLogin }) {
           </p>
 
           <form onSubmit={handleLogin}>
-            <label htmlFor="login-username">Email Address</label>
+            <label htmlFor="login-username">Username</label>
 
             <div className="input-wrapper">
               <span className="input-icon">✉</span>
@@ -212,22 +215,24 @@ function Login({ onLogin }) {
             </button>
           </form>
 
-          <div className="google-login">
-            <div className="login-divider">
-              <span>OR</span>
-            </div>
+          {googleEnabled && (
+            <div className="google-login">
+              <div className="login-divider">
+                <span>OR</span>
+              </div>
 
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() =>
-                setMessage("Google sign-in failed. Please try again.")
-              }
-              text="signin_with"
-              shape="rectangular"
-              theme="outline"
-              width="300"
-            />
-          </div>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() =>
+                  setMessage("Google sign-in failed. Please try again.")
+                }
+                text="signin_with"
+                shape="rectangular"
+                theme="outline"
+                width="300"
+              />
+            </div>
+          )}
 
           {message && (
             <div className="login-message" role="alert">
