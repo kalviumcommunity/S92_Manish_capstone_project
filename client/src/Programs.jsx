@@ -24,6 +24,15 @@ const EMPTY_FORM = {
 const toDateInput = (value) =>
   value ? new Date(value).toISOString().slice(0, 10) : "";
 
+// Today's date in the user's own time zone, as yyyy-mm-dd
+const todayInput = () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return `${now.getFullYear()}-${month}-${day}`;
+};
+
 function Programs() {
   const [programs, setPrograms] = useState([]);
   const [search, setSearch] = useState("");
@@ -74,7 +83,7 @@ function Programs() {
   const openCreateForm = () => {
     setForm({
       ...EMPTY_FORM,
-      startDate: toDateInput(new Date()),
+      startDate: todayInput(),
     });
     setEditingId(null);
     setFormError("");

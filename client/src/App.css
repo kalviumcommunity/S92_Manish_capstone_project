@@ -173,6 +173,7 @@ a {
 }
 
 .brand h2 {
+  color: white;
   font-size: 16px;
   font-weight: 800;
   line-height: 1.15;
@@ -4344,4 +4345,30 @@ footer {
   .login-right {
     padding: 32px 16px;
   }
+}
+
+/* =========================================================
+   LAYOUT POLISH
+========================================================= */
+
+/* AI insights content lines up with the panel header */
+.ai-panel > .ai-placeholder,
+.ai-panel > .ai-result,
+.ai-panel > .login-message {
+  margin: 0 21px 20px;
+}
+
+/* Upload guide: title and description on separate lines */
+.guide-item strong,
+.guide-item span {
+  display: block;
+}
+
+.guide-item strong {
+  margin-bottom: 3px;
+}
+
+/* Programs page has no top bar, so give its header some room */
+.programs-header {
+  margin-top: 24px;
 }
