@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "./api";
+import { downloadCsv } from "./download";
+import { programPerformanceRows } from "./reportData";
 
 // Chart area is drawn in a 600 x 220 SVG viewBox (score 0-100)
 const CHART_WIDTH = 600;
@@ -30,43 +32,12 @@ const buildTrendPath = (trend) => {
 const formatValue = (value, suffix = "") =>
   value === null || value === undefined ? "—" : `${value}${suffix}`;
 
-// Let the browser save the program statistics as a CSV file
-const exportCsv = (programs) => {
-  const header = [
-    "Program",
-    "Category",
-    "Status",
-    "Participants",
-    "Average Engagement",
-    "Average Satisfaction",
-    "Attendance Rate (%)",
-  ];
-
-  const rows = programs.map((program) => [
-    program.name,
-    program.category,
-    program.status,
-    program.participants,
-    program.averageEngagement ?? "",
-    program.averageSatisfaction ?? "",
-    program.attendanceRate ?? "",
-  ]);
-
-  const csv = [header, ...rows]
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n");
-
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "community-connect-analytics.csv";
-  link.click();
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
+// Download the program statistics as a CSV file
+const exportCsv = (programs) =>
+  downloadCsv(
+    "community-connect-analytics.csv",
+    programPerformanceRows(programs)
+  );
 
 function Analytics() {
   const [summary, setSummary] = useState(null);
