@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const multer = require("multer");
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const app = express();
 const googleClient = new OAuth2Client(
