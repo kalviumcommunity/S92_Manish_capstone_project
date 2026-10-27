@@ -38,6 +38,8 @@ const Engagement = require("./models/Engagement");
 const Upload = require("./models/Upload");
 
 const { parseCsv, importEngagementRows } = require("./utils/csvImport");
+const { getAnalyticsSummary } = require("./utils/analytics");
+const { generateInsights, AiServiceError } = require("./utils/aiInsights");
 
 // ======================================================
 // JWT AUTHENTICATION MIDDLEWARE
@@ -672,6 +674,66 @@ app.delete("/api/uploads/:id", authenticateToken, async (req, res) => {
     res.status(200).json({ message: "Upload deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ======================================================
+// ANALYTICS + AI INSIGHTS APIs
+// ======================================================
+
+// GET live analytics for the dashboard (JWT protected)
+app.get("/api/analytics/summary", authenticateToken, async (req, res) => {
+  try {
+    const summary = await getAnalyticsSummary();
+    res.status(200).json(summary);
+  } catch (error) {
+    console.error("Analytics error:", error.message);
+    res.status(500).json({ message: "Failed to load analytics" });
+  }
+});
+
+// One AI request per user every 10 seconds to limit API usage
+const AI_COOLDOWN_MS = 10 * 1000;
+const lastAiRequest = new Map();
+
+// GENERATE AI insights from the analytics (JWT protected)
+app.post("/api/ai/insights", authenticateToken, async (req, res) => {
+  const userId = String(req.user.id);
+  const now = Date.now();
+  const previous = lastAiRequest.get(userId) || 0;
+
+  if (now - previous < AI_COOLDOWN_MS) {
+    const seconds = Math.ceil((AI_COOLDOWN_MS - (now - previous)) / 1000);
+
+    return res.status(429).json({
+      message: `Please wait ${seconds} seconds before generating new insights`,
+    });
+  }
+
+  lastAiRequest.set(userId, now);
+
+  try {
+    const summary = await getAnalyticsSummary();
+
+    if (summary.totals.programs === 0) {
+      return res.status(400).json({
+        message: "Add programs and engagement data before generating insights",
+      });
+    }
+
+    const insights = await generateInsights(summary);
+
+    res.status(200).json({
+      ...insights,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (error instanceof AiServiceError) {
+      return res.status(error.status).json({ message: error.message });
+    }
+
+    console.error("AI insights error:", error.message);
+    res.status(500).json({ message: "Failed to generate insights" });
   }
 });
 

@@ -1,0 +1,43 @@
+meta {
+  name: Analytics Summary
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("includes totals, categories, programs and a 6-month trend", function () {
+    expect(res.body.totals.programs).to.be.a("number");
+    expect(res.body.categories).to.be.an("array");
+    expect(res.body.programs).to.be.an("array");
+    expect(res.body.trend).to.have.lengthOf(6);
+  });
+}
+
+docs {
+  Live statistics used by the Analytics page.
+
+  **Auth:** Bearer token
+
+  **Response 200**
+  - `totals`: programs, activePrograms, participants, engagements,
+    averageEngagement (0-100), averageSatisfaction (1-5), attendanceRate (%)
+  - `categories`: `[{ category, programs, averageEngagement }]`
+  - `programs`: per-program stats, highest engagement first
+  - `trend`: average engagement for each of the last 6 months
+
+  Averages are `null` when there is no data yet.
+}
