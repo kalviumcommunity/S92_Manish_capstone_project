@@ -156,11 +156,13 @@ GitHub Actions runs the server tests, the client lint and build, and a Docker Co
 
 ## Deployment
 
-| Part | Host |
-|---|---|
-| Frontend | Vercel (`client/vercel.json`) |
-| API | Render (`render.yaml`) |
-| Database | MongoDB Atlas |
+**Recommended:** one Netlify site serves the frontend, and the API runs as a Netlify Function (`netlify.toml`).
+
+| Part | Netlify option | Alternative |
+|---|---|---|
+| Frontend | Netlify | Vercel (`client/vercel.json`) |
+| API | Netlify Function (`server/functions/api.js`) | Render (`render.yaml`) |
+| Database | MongoDB Atlas | MongoDB Atlas |
 
 Step-by-step instructions: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 

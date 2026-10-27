@@ -1,7 +1,10 @@
 // Generates engagement insights with the Google Gemini API.
 
 const DEFAULT_MODEL = "gemini-3.8-flash";
-const REQUEST_TIMEOUT_MS = 30000;
+// Serverless functions (Netlify) stop after 10 seconds, so answer before that
+const REQUEST_TIMEOUT_MS =
+  Number(process.env.GEMINI_TIMEOUT_MS) ||
+  (process.env.AWS_LAMBDA_FUNCTION_NAME ? 8000 : 30000);
 const MAX_ITEMS = 5;
 
 // Error with an HTTP status for the route to send back

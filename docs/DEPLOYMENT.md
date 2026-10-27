@@ -1,5 +1,49 @@
 # Deployment Guide
 
+There are two supported ways to deploy:
+
+- **Option A: Netlify only** (recommended). The frontend and the API run on one Netlify site.
+- **Option B: Vercel + Render.** The frontend and the API are hosted separately.
+
+Both use a MongoDB Atlas database (step 1 below).
+
+## Option A: Netlify (frontend + API on one site)
+
+`netlify.toml` builds the React app and runs the Express API as a Netlify Function
+(`server/functions/api.js`). Requests to `/api/*` go to the function, so the frontend and
+API share one URL and no CORS setup is needed.
+
+1. Create the MongoDB Atlas database (step 1 below).
+2. Netlify → **Add new site → Import an existing project** → select this GitHub repository.
+   Netlify reads `netlify.toml`, so leave the build settings as they are.
+3. **Site configuration → Environment variables** → add:
+
+| Variable | Value |
+|---|---|
+| `MONGO_URI` | Atlas connection string |
+| `JWT_SECRET` | long random string |
+| `GEMINI_API_KEY` | optional, enables AI insights |
+| `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` | optional, enables Google sign-in |
+
+4. **Deploys → Trigger deploy**. Then open `https://<site>.netlify.app/api/health`. It should return
+   `{"status":"ok","database":"connected"}`.
+
+Or deploy from the terminal:
+
+```bash
+npx netlify-cli login
+npx netlify-cli init                 # create or link the site
+npx netlify-cli env:set MONGO_URI "mongodb+srv://..."
+npx netlify-cli env:set JWT_SECRET "<random string>"
+npx netlify-cli deploy --build --prod
+```
+
+Notes:
+- Netlify functions time out after 10 seconds, so the Gemini request is limited to 8 seconds there.
+- Each function request can carry at most about 6 MB, which is well above the 2 MB CSV limit.
+
+## Option B: Vercel + Render
+
 Community Connect is deployed in three parts:
 
 | Part | Host | Folder |
