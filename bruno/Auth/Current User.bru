@@ -1,0 +1,35 @@
+meta {
+  name: Current User
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns the logged-in user", function () {
+    expect(res.body.user.username).to.equal(bru.getVar("username"));
+  });
+}
+
+docs {
+  Returns the profile of the logged-in user.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 `{ user: { id, name, username, email, role } }`
+  - 401 missing, invalid or expired token
+}

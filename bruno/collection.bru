@@ -1,0 +1,30 @@
+docs {
+  # Community Connect API
+
+  REST API for the Community Engagement Analytics System.
+
+  ## How to use
+  1. Start the server (`cd server && npm run dev`).
+  2. Select the **Local** environment (or **Production** for the deployed API).
+  3. Run the whole collection, or run **Auth / Register** and then **Auth / Login** first.
+     Login saves the JWT in the `token` variable.
+  4. All protected requests send `Authorization: Bearer {{token}}`.
+
+  Run every request from the terminal:
+
+  ```
+  cd bruno
+  npx @usebruno/cli run --env Local
+  ```
+
+  ## Errors
+  Errors return JSON: `{ "message": "..." }`
+
+  | Status | Meaning |
+  |---|---|
+  | 400 | Invalid input |
+  | 401 | Missing, invalid or expired token |
+  | 403 | Logged in but not allowed |
+  | 404 | Record not found |
+  | 409 | Username or email already exists |
+}

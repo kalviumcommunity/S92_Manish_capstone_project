@@ -1,0 +1,25 @@
+meta {
+  name: Delete Missing Program
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/programs/{{programId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 404", function () {
+    expect(res.status).to.equal(404);
+  });
+}
+
+docs {
+  Deleting the same program again returns 404.
+}
