@@ -157,6 +157,12 @@ app.post("/api/auth/register", async (req, res) => {
       });
     }
 
+    if (String(password).length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters",
+      });
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedUsername = username.trim();
 

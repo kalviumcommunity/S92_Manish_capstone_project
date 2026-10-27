@@ -4234,3 +4234,40 @@ footer {
 
   color: #b91c1c;
 }
+
+/* =========================================================
+   SIGN UP FORM
+========================================================= */
+
+.input-wrapper select {
+  width: 100%;
+  height: 46px;
+
+  padding: 0 14px 0 39px;
+
+  background: white;
+
+  border: 1px solid #d9dee8;
+  border-radius: 9px;
+
+  outline: none;
+
+  color: #172033;
+
+  font-size: 12px;
+}
+
+.input-wrapper select:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.login-options {
+  justify-content: flex-end;
+}
+
+.login-form-container form > .login-button:first-of-type {
+  margin-top: 8px;
+}

@@ -54,6 +54,15 @@ describe("POST /api/auth/register", () => {
       .expect(400);
   });
 
+  it("rejects a password shorter than 8 characters", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({ ...newUser, password: "short" })
+      .expect(400);
+
+    expect(response.body.message).toBe("Password must be at least 8 characters");
+  });
+
   it("rejects a duplicate username or email", async () => {
     await request(app).post("/api/auth/register").send(newUser).expect(201);
 
