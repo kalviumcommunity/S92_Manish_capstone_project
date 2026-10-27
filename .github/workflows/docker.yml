@@ -1,0 +1,52 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compose:
+    name: Build and run with Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images and start the stack
+        run: docker compose up --build --detach --wait --wait-timeout 180
+
+      - name: API health check
+        run: curl --fail --silent http://localhost:5000/api/health
+
+      - name: Register, log in and create a program through the API
+        run: |
+          set -e
+          curl --fail --silent -H "Content-Type: application/json" \
+            -d '{"name":"CI User","username":"ciuser","email":"ci@example.com","password":"Password123"}' \
+            http://localhost:5000/api/auth/register
+          TOKEN=$(curl --fail --silent -H "Content-Type: application/json" \
+            -d '{"username":"ciuser","password":"Password123"}' \
+            http://localhost:5000/api/auth/login | jq -r .token)
+          curl --fail --silent -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -d '{"name":"CI Program","category":"Education","startDate":"2026-11-01"}' \
+            http://localhost:5000/api/programs
+
+      - name: Frontend is served by nginx
+        run: |
+          curl --fail --silent http://localhost:8080/ | grep "<title>Community Connect</title>"
+          # Unknown paths fall back to index.html
+          curl --fail --silent http://localhost:8080/programs | grep "Community Connect"
+
+      - name: CORS allows the Docker frontend
+        run: |
+          curl --silent -D - -o /dev/null -H "Origin: http://localhost:8080" \
+            http://localhost:5000/api/health | grep -i "access-control-allow-origin: http://localhost:8080"
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes

@@ -1,0 +1,47 @@
+# Run the whole app locally: docker compose up --build
+#   Frontend: http://localhost:8080
+#   API:      http://localhost:5000
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/community-connect
+      # Set JWT_SECRET in a .env file next to this file for anything but local testing
+      JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-me}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # Optional: enables AI insights on the Analytics page
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CLIENT_URL: http://localhost:8080
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:5000
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:
