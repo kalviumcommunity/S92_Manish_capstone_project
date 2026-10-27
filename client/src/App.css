@@ -4003,3 +4003,68 @@ footer {
     font-size: 27px;
   }
 }
+/* =========================================================
+   PROGRAM FORM (CREATE / EDIT)
+========================================================= */
+
+.program-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 0 25px 25px;
+}
+
+.program-form-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  color: #475569;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.program-form-body input,
+.program-form-body select,
+.program-form-body textarea {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  color: var(--text);
+
+  font: inherit;
+  font-weight: 400;
+}
+
+.program-form-body textarea {
+  resize: vertical;
+}
+
+.program-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.program-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.program-form-actions .primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .program-form-row {
+    grid-template-columns: 1fr;
+  }
+}

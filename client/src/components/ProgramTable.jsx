@@ -1,41 +1,37 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../api";
 
 function ProgramTable() {
   const [programs, setPrograms] = useState([]);
   const [editingProgram, setEditingProgram] = useState(null);
 
-  const fetchPrograms = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/programs"
-      );
-
-      const data = await response.json();
-
-      setPrograms(data);
-    } catch (error) {
-      console.error("Error fetching programs:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchPrograms();
+    let ignore = false;
+
+    apiFetch("/api/programs")
+      .then((data) => {
+        if (!ignore) {
+          setPrograms(Array.isArray(data) ? data : []);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching programs:", error);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/programs/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      await apiFetch(`/api/programs/${id}`, {
+        method: "DELETE",
+      });
 
-      if (response.ok) {
-        setPrograms(
-          programs.filter((program) => program._id !== id)
-        );
-      }
+      setPrograms((previousPrograms) =>
+        previousPrograms.filter((program) => program._id !== id)
+      );
     } catch (error) {
       console.error("Error deleting program:", error);
     }
@@ -45,30 +41,23 @@ function ProgramTable() {
     event.preventDefault();
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/programs/${editingProgram._id}`,
+      const updatedProgram = await apiFetch(
+        `/api/programs/${editingProgram._id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify(editingProgram),
         }
       );
 
-      const updatedProgram = await response.json();
+      setPrograms((previousPrograms) =>
+        previousPrograms.map((program) =>
+          program._id === updatedProgram._id
+            ? updatedProgram
+            : program
+        )
+      );
 
-      if (response.ok) {
-        setPrograms(
-          programs.map((program) =>
-            program._id === updatedProgram._id
-              ? updatedProgram
-              : program
-          )
-        );
-
-        setEditingProgram(null);
-      }
+      setEditingProgram(null);
     } catch (error) {
       console.error("Error updating program:", error);
     }
