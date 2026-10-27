@@ -1,0 +1,46 @@
+meta {
+  name: Create User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Arun Kumar",
+    "email": "{{newUserEmail}}",
+    "role": "participant"
+  }
+}
+
+script:pre-request {
+  bru.setVar("newUserEmail", "participant" + Date.now() + "@example.com");
+}
+
+tests {
+  test("returns 201", function () {
+    expect(res.status).to.equal(201);
+  });
+}
+
+docs {
+  Creates a user (for example a participant added by an organizer).
+  A password is optional and is hashed when given. Only admins can create admins.
+
+  **Auth:** Bearer token
+
+  **Body:** `{ name, email, username?, password?, role? }`
+
+  **Responses**
+  - 201 the user (without password)
+  - 400 validation error or duplicate email
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Google Login
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/google
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "credential": "replace-with-a-google-id-token"
+  }
+}
+
+tests {
+  test("rejects an invalid Google credential", function () {
+    expect(res.status).to.be.oneOf([401, 500]);
+  });
+}
+
+docs {
+  Signs in with Google. The client sends the ID token from the Sign in with Google button;
+  the server verifies it with Google, creates a participant account on first sign-in,
+  and returns the app's own JWT.
+
+  This example sends a placeholder credential, so it is rejected
+  (401, or 500 when `GOOGLE_CLIENT_ID` is not configured on the server).
+
+  **Auth:** none
+
+  **Body:** `{ "credential": "<Google ID token>" }`
+
+  **Responses**
+  - 200 `{ message, token, user }`
+  - 400 credential missing
+  - 401 token rejected by Google or email not verified
+  - 500 `GOOGLE_CLIENT_ID` not configured
+}

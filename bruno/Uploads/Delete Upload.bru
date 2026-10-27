@@ -1,0 +1,33 @@
+meta {
+  name: Delete Upload
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/uploads/{{uploadId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Deletes an uploaded file. Imported engagement records are kept.
+  Only the uploader or an admin can delete it.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 `{ message }`
+  - 403 not the uploader
+  - 404 upload not found
+}

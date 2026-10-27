@@ -1,0 +1,44 @@
+meta {
+  name: Update Program
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/programs/{{programId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "status": "active",
+    "capacity": 40
+  }
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("updates the fields", function () {
+    expect(res.body.status).to.equal("active");
+    expect(res.body.capacity).to.equal(40);
+  });
+}
+
+docs {
+  Updates a program. Send only the fields to change; validation rules still apply.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 the updated program
+  - 400 invalid ID or validation error
+  - 404 program not found
+}

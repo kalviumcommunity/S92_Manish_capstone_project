@@ -1,0 +1,23 @@
+meta {
+  name: Request Without Token
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/programs
+  body: none
+  auth: none
+}
+
+tests {
+  test("returns 401", function () {
+    expect(res.status).to.equal(401);
+  });
+}
+
+docs {
+  Shows that protected routes reject requests without a JWT.
+
+  **Response 401:** `{ "message": "Access denied. Token required." }`
+}

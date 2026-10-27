@@ -1,0 +1,27 @@
+meta {
+  name: Get All Engagements
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/engagements
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Lists engagements with the related user and program populated.
+
+  **Auth:** Bearer token
+}

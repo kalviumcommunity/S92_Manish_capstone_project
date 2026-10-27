@@ -1,0 +1,32 @@
+meta {
+  name: Get User by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Returns one user.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 the user
+  - 400 invalid ID
+  - 404 user not found
+}
