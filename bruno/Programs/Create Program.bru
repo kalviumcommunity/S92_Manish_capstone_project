@@ -1,0 +1,65 @@
+meta {
+  name: Create Program
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/programs
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "Youth Coding Club",
+    "description": "Weekly coding sessions for teenagers",
+    "category": "Education",
+    "startDate": "2026-11-01",
+    "endDate": "2027-01-31",
+    "capacity": 30,
+    "status": "upcoming"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body._id) {
+    bru.setVar("programId", res.body._id);
+  }
+}
+
+tests {
+  test("returns 201", function () {
+    expect(res.status).to.equal(201);
+  });
+
+  test("returns the new program", function () {
+    expect(res.body.name).to.equal("Youth Coding Club");
+  });
+}
+
+docs {
+  Creates a program.
+
+  **Auth:** Bearer token
+
+  **Body**
+  | Field | Type | Required | Notes |
+  |---|---|---|---|
+  | name | string | yes | |
+  | category | string | yes | e.g. Education, Health, Sports |
+  | startDate | date | yes | `YYYY-MM-DD` |
+  | endDate | date | no | |
+  | description | string | no | |
+  | capacity | number | no | default 0 |
+  | status | string | no | `upcoming` (default), `active`, `completed` |
+
+  **Responses**
+  - 201 the created program
+  - 400 validation error
+  - 401 missing or invalid token
+}

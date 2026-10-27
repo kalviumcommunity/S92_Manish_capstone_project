@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Community Connect API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

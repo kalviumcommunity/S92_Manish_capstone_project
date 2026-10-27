@@ -1,0 +1,25 @@
+meta {
+  name: Server Status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/
+  body: none
+  auth: none
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Checks that the server is running.
+
+  **Auth:** none
+
+  **Response 200:** plain text `Community Connect server is running`
+}

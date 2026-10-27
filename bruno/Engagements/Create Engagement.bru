@@ -1,0 +1,60 @@
+meta {
+  name: Create Engagement
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/engagements
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "user": "{{userId}}",
+    "program": "{{programId}}",
+    "sessionsAttended": 8,
+    "totalSessions": 10,
+    "engagementScore": 85,
+    "satisfactionScore": 5,
+    "feedback": "Great sessions"
+  }
+}
+
+tests {
+  test("returns 201", function () {
+    expect(res.status).to.equal(201);
+  });
+
+  test("populates the user and program", function () {
+    expect(res.body.user.name).to.be.a("string");
+    expect(res.body.program.name).to.equal("Youth Coding Club");
+  });
+}
+
+docs {
+  Records a participant's engagement with a program.
+  `user` and `program` are IDs; the response includes the full related records.
+
+  **Auth:** Bearer token
+
+  **Body**
+  | Field | Type | Notes |
+  |---|---|---|
+  | user | ObjectId | required |
+  | program | ObjectId | required |
+  | sessionsAttended | number | 0 or more |
+  | totalSessions | number | 0 or more |
+  | engagementScore | number | 0 to 100 |
+  | satisfactionScore | number | 1 to 5 |
+  | feedback | string | |
+
+  **Responses**
+  - 201 engagement with `user` and `program` populated
+  - 400 validation error
+}
