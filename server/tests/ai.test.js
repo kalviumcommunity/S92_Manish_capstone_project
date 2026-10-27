@@ -40,6 +40,7 @@ afterEach(() => {
   jest.restoreAllMocks();
   delete process.env.GEMINI_API_KEY;
   delete process.env.GEMINI_MODEL;
+  delete process.env.GEMINI_FALLBACK_MODEL;
 });
 
 describe("GET /api/analytics/summary", () => {
@@ -197,14 +198,66 @@ describe("POST /api/ai/insights", () => {
     expect(response.body.message).toMatch(/Please wait/);
   });
 
-  it("returns 502 when Gemini fails", async () => {
+  it("returns 502 when Gemini rejects the request", async () => {
     process.env.GEMINI_API_KEY = "test-key";
-    mockGemini("", 500);
+    const fetchMock = mockGemini("", 400);
 
     const { token } = await createUserAndLogin();
     await createProgram(token);
 
     await request(app).post("/api/ai/insights").set(auth(token)).expect(502);
+
+    // Not an overload error, so no fallback attempt
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the fallback model when the main model is overloaded", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+    process.env.GEMINI_MODEL = "main-model";
+    process.env.GEMINI_FALLBACK_MODEL = "backup-model";
+
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: { message: "high demand" } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify(INSIGHTS) }] } }],
+        }),
+      });
+
+    const { token } = await createUserAndLogin();
+    await createProgram(token);
+
+    const response = await request(app)
+      .post("/api/ai/insights")
+      .set(auth(token))
+      .expect(200);
+
+    expect(response.body.model).toBe("backup-model");
+    expect(fetchMock.mock.calls[0][0]).toContain("/models/main-model:");
+    expect(fetchMock.mock.calls[1][0]).toContain("/models/backup-model:");
+  });
+
+  it("returns 503 when every model is overloaded", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+    const fetchMock = mockGemini("", 503);
+
+    const { token } = await createUserAndLogin();
+    await createProgram(token);
+
+    const response = await request(app)
+      .post("/api/ai/insights")
+      .set(auth(token))
+      .expect(503);
+
+    expect(response.body.message).toMatch(/busy/);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("returns 502 when Gemini replies with something other than JSON", async () => {

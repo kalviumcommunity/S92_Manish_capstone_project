@@ -154,24 +154,9 @@ function Login({ onLogin }) {
   return (
     <div className="login-page">
       {/* LEFT BRANDING SECTION */}
-      <div className="login-brand">
-        <div className="brand-visual">
-          <div className="orb orb-one"></div>
-          <div className="orb orb-two"></div>
-          <div className="orb orb-three"></div>
-
-          <div className="flower flower-one"></div>
-          <div className="flower flower-two"></div>
-          <div className="flower flower-three"></div>
-          <div className="flower flower-four"></div>
-          <div className="flower flower-five"></div>
-          <div className="flower flower-six"></div>
-
-          <div className="flower-center"></div>
-        </div>
-
-        <div className="brand-content">
-          <h2>Community Connect</h2>
+      <div className="login-left">
+        <div className="login-brand-content">
+          <h1>Community Connect</h1>
 
           <p>
             Sign in to manage programs, collaborate with your team,
@@ -183,12 +168,26 @@ function Login({ onLogin }) {
             Secure access for your organization
           </div>
         </div>
+
+        <div className="login-art">
+          <div className="art-center">
+            <div className="art-orbit orbit-one"></div>
+            <div className="art-orbit orbit-two"></div>
+            <div className="art-orbit orbit-three"></div>
+
+            <div className="art-core">CC</div>
+          </div>
+
+          <span className="art-circle circle-one"></span>
+          <span className="art-circle circle-two"></span>
+          <span className="art-circle circle-three"></span>
+        </div>
       </div>
 
       {/* RIGHT LOGIN SECTION */}
-      <div className="login-form-section">
+      <div className="login-right">
         <div className="login-form-container">
-          <div className="login-icon">C</div>
+          <div className="login-logo">C</div>
 
           <h1>{isSignup ? "Create your account" : "Welcome back"}</h1>
 

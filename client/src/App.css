@@ -173,6 +173,7 @@ a {
 }
 
 .brand h2 {
+  color: white;
   font-size: 16px;
   font-weight: 800;
   line-height: 1.15;
@@ -4270,4 +4271,104 @@ footer {
 
 .login-form-container form > .login-button:first-of-type {
   margin-top: 8px;
+}
+
+/* =========================================================
+   LOGIN PAGE FIXES
+========================================================= */
+
+.login-form-container form > label {
+  text-align: left;
+}
+
+.login-form-container form > .input-wrapper {
+  margin-bottom: 16px;
+}
+
+.login-left h1 {
+  color: white;
+}
+
+.google-login {
+  margin-top: 18px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.login-divider {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  background: #e5e7eb;
+}
+
+/* Stack the login panels on small screens */
+@media (max-width: 900px) {
+  .login-page {
+    flex-direction: column;
+  }
+
+  .login-left,
+  .login-right {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .login-left {
+    padding: 32px 24px;
+  }
+
+  .login-art {
+    display: none;
+  }
+
+  .login-right {
+    padding: 32px 16px;
+  }
+}
+
+/* =========================================================
+   LAYOUT POLISH
+========================================================= */
+
+/* AI insights content lines up with the panel header */
+.ai-panel > .ai-placeholder,
+.ai-panel > .ai-result,
+.ai-panel > .login-message {
+  margin: 0 21px 20px;
+}
+
+/* Upload guide: title and description on separate lines */
+.guide-item strong,
+.guide-item span {
+  display: block;
+}
+
+.guide-item strong {
+  margin-bottom: 3px;
+}
+
+/* Programs page has no top bar, so give its header some room */
+.programs-header {
+  margin-top: 24px;
 }

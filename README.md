@@ -109,7 +109,7 @@ Or run everything with Docker: `docker compose up --build`, then open http://loc
 | `JWT_SECRET` | yes | Long random string used to sign JWTs |
 | `GOOGLE_CLIENT_ID` | no | Google OAuth client ID (enables Google sign-in) |
 | `GEMINI_API_KEY` | no | Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) (enables AI insights) |
-| `GEMINI_MODEL` | no | Gemini model, default `gemini-3.8-flash` |
+| `GEMINI_MODEL` | no | Gemini model, default `gemini-3.5-flash-lite` |
 | `CLIENT_URL` | production | Allowed frontend origin(s) for CORS, comma-separated |
 | `PORT` | no | Default `5000` |
 

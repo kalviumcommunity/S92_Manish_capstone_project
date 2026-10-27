@@ -6,3 +6,6 @@ server/.env
 !.env.example
 # Test coverage
 coverage/
+
+# Local Netlify folder
+.netlify

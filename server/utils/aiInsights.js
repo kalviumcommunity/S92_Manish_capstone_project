@@ -1,6 +1,8 @@
 // Generates engagement insights with the Google Gemini API.
 
-const DEFAULT_MODEL = "gemini-3.8-flash";
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
+// Used when the main model is overloaded
+const FALLBACK_MODEL = "gemini-3.1-flash-lite";
 // Serverless functions (Netlify) stop after 10 seconds, so answer before that
 const REQUEST_TIMEOUT_MS =
   Number(process.env.GEMINI_TIMEOUT_MS) ||
@@ -71,67 +73,106 @@ const parseInsights = (text) => {
 // GENERATE INSIGHTS
 // ======================================================
 
+// Statuses that mean "overloaded or temporarily failing": worth trying another model
+const RETRYABLE_STATUSES = [429, 500, 503];
+
+// One generateContent call; returns the fetch Response
+const callGemini = (model, apiKey, summary, timeoutMs) =>
+  fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: INSTRUCTIONS }] },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: JSON.stringify(buildPromptData(summary)) }],
+          },
+        ],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.4,
+        },
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    }
+  );
+
 const generateInsights = async (summary) => {
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const primaryModel = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || FALLBACK_MODEL;
 
   if (!apiKey) {
     throw new AiServiceError("AI insights are not configured on the server", 503);
   }
 
-  let response;
+  // All attempts share one time budget (serverless functions have a hard limit)
+  const deadline = Date.now() + REQUEST_TIMEOUT_MS;
+  const models = [...new Set([primaryModel, fallbackModel].filter(Boolean))];
+  let lastStatus = null;
 
-  try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: INSTRUCTIONS }] },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: JSON.stringify(buildPromptData(summary)) }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.4,
-          },
-        }),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      }
-    );
-  } catch (error) {
-    console.error("Gemini request failed:", error.message);
-    throw new AiServiceError("Could not reach the AI service", 502);
-  }
+  for (const model of models) {
+    const remaining = deadline - Date.now();
 
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    console.error("Gemini error:", response.status, data.error?.message);
-
-    if (response.status === 429) {
-      throw new AiServiceError("The AI service is busy. Please try again in a minute.", 429);
+    // Not enough time left for another attempt
+    if (remaining < 1500) {
+      break;
     }
 
-    throw new AiServiceError("The AI service could not generate insights", 502);
+    let response;
+
+    try {
+      response = await callGemini(model, apiKey, summary, remaining);
+    } catch (error) {
+      console.error(`Gemini request failed (${model}):`, error.message);
+      throw new AiServiceError("Could not reach the AI service", 502);
+    }
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error(`Gemini error (${model}):`, response.status, data.error?.message);
+      lastStatus = response.status;
+
+      // Overloaded: try the next model
+      if (RETRYABLE_STATUSES.includes(response.status)) {
+        continue;
+      }
+
+      throw new AiServiceError("The AI service could not generate insights", 502);
+    }
+
+    const text = (data.candidates?.[0]?.content?.parts || [])
+      .map((part) => part.text || "")
+      .join("");
+
+    if (!text) {
+      throw new AiServiceError("The AI service returned an empty response", 502);
+    }
+
+    return { ...parseInsights(text), model };
   }
 
-  const text = (data.candidates?.[0]?.content?.parts || [])
-    .map((part) => part.text || "")
-    .join("");
-
-  if (!text) {
-    throw new AiServiceError("The AI service returned an empty response", 502);
+  if (lastStatus !== null) {
+    throw new AiServiceError(
+      "The AI service is busy right now. Please try again in a minute.",
+      503
+    );
   }
 
-  return { ...parseInsights(text), model };
+  throw new AiServiceError("The AI service did not respond in time", 504);
 };
 
-module.exports = { generateInsights, parseInsights, AiServiceError, DEFAULT_MODEL };
+module.exports = {
+  generateInsights,
+  parseInsights,
+  AiServiceError,
+  DEFAULT_MODEL,
+  FALLBACK_MODEL,
+};
