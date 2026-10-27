@@ -42,6 +42,20 @@ Notes:
 - Netlify functions time out after 10 seconds, so the Gemini request is limited to 8 seconds there.
 - Each function request can carry at most about 6 MB, which is well above the 2 MB CSV limit.
 
+### Automatic deploys from GitHub
+
+`.github/workflows/netlify-deploy.yml` deploys every push to `main`, after the server tests
+pass. It is used instead of Netlify's own Git integration, because installing the Netlify app on
+the GitHub organization needs an organization owner. One-time setup:
+
+1. Netlify → **User settings → Applications → Personal access tokens → New access token**.
+   Copy the token.
+2. GitHub repository → **Settings → Secrets and variables → Actions**:
+   - **Secrets** tab → **New repository secret** with name `NETLIFY_AUTH_TOKEN` and the token as its value.
+   - **Variables** tab → `NETLIFY_SITE_ID` set to the site's ID (Netlify → Project configuration → General → Project ID).
+
+To redeploy without a code change, use **Actions → Deploy to Netlify → Run workflow**.
+
 ## Option B: Vercel + Render
 
 Community Connect is deployed in three parts:
