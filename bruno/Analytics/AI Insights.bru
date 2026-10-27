@@ -1,0 +1,36 @@
+meta {
+  name: AI Insights
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/ai/insights
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns insights, or 503 when no Gemini API key is configured", function () {
+    expect(res.status).to.be.oneOf([200, 503]);
+  });
+}
+
+docs {
+  Sends the analytics summary to Google Gemini and returns a written analysis.
+
+  **Auth:** Bearer token
+
+  **Server configuration:** `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`, default `gemini-3.8-flash`)
+
+  **Responses**
+  - 200 `{ summary, highlights[], concerns[], recommendations[], model, generatedAt }`
+  - 400 no programs yet
+  - 429 more than one request per user every 10 seconds
+  - 502 the AI service failed or returned an invalid reply
+  - 503 `GEMINI_API_KEY` is not set
+}

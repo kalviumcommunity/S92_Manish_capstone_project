@@ -22,3 +22,6 @@ services:
       # Deployed frontend URL, e.g. https://community-connect.vercel.app
       - key: CLIENT_URL
         sync: false
+      # Google Gemini API key for AI insights (optional)
+      - key: GEMINI_API_KEY
+        sync: false
