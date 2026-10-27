@@ -1,0 +1,24 @@
+# Render Blueprint for the Community Connect API.
+# Render dashboard: New + -> Blueprint -> select this repository.
+services:
+  - type: web
+    name: community-connect-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # MongoDB Atlas connection string
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # Deployed frontend URL, e.g. https://community-connect.vercel.app
+      - key: CLIENT_URL
+        sync: false
