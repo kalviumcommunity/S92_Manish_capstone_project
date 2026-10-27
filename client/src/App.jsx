@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
+
+import { clearLogin } from "./api";
 
 import Login from "./components/login";
 import Programs from "./Programs";
@@ -27,6 +29,21 @@ function App() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [showHelp, setShowHelp] = useState(false);
 
+  // Return to the login page when the token is removed
+  // (logout button, or the API reported an expired token).
+  useEffect(() => {
+    const handleSignedOut = () => {
+      setIsLoggedIn(false);
+      setActivePage("Dashboard");
+    };
+
+    window.addEventListener("auth:logout", handleSignedOut);
+
+    return () => {
+      window.removeEventListener("auth:logout", handleSignedOut);
+    };
+  }, []);
+
   // =========================================================
   // LOGIN SUCCESS
   // =========================================================
@@ -41,14 +58,9 @@ function App() {
   // =========================================================
 
   const handleLogout = () => {
-    // Remove all authentication information
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("user");
-
-    // Return to login page
-    setIsLoggedIn(false);
-    setActivePage("Dashboard");
+    // Remove all authentication information.
+    // App returns to the login page through the "auth:logout" event.
+    clearLogin();
   };
 
   // =========================================================
@@ -65,6 +77,8 @@ function App() {
 
   const loggedInUsername =
     localStorage.getItem("username") || "Admin";
+
+  const userInitials = loggedInUsername.slice(0, 2).toUpperCase();
 
   // =========================================================
   // DASHBOARD DATA
@@ -299,7 +313,7 @@ function App() {
           <div className="profile">
 
             <div className="avatar">
-              MA
+              {userInitials}
             </div>
 
             <div className="profile-info">
@@ -431,7 +445,10 @@ function App() {
                   ↓ Export Report
                 </button>
 
-                <button className="primary-btn">
+                <button
+                  className="primary-btn"
+                  onClick={() => setActivePage("Programs")}
+                >
                   + Add Program
                 </button>
 

@@ -1,5 +1,3 @@
-import React from "react";
-
 function HelpCenter({ onClose }) {
   return (
     <div className="help-overlay" onClick={onClose}>
