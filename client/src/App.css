@@ -4068,3 +4068,53 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   UPLOAD RESULT + HISTORY
+========================================================= */
+
+.upload-result {
+  margin-top: 15px;
+  padding: 11px;
+
+  background: #ecfdf5;
+
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+
+  color: #047857;
+
+  font-size: 12px;
+  text-align: left;
+}
+
+.upload-result ul {
+  margin: 8px 0 0 18px;
+
+  color: #b45309;
+}
+
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-size {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--text-muted);
+
+  font-size: 10px;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.upload-actions .secondary-btn {
+  height: 32px;
+  padding: 0 12px;
+}

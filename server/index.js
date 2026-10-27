@@ -6,6 +6,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
+const multer = require("multer");
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ app.use(express.json());
 const User = require("./models/User");
 const Program = require("./models/Program");
 const Engagement = require("./models/Engagement");
+const Upload = require("./models/Upload");
+
+const { parseCsv, importEngagementRows } = require("./utils/csvImport");
 
 // ======================================================
 // JWT AUTHENTICATION MIDDLEWARE
@@ -44,7 +48,7 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({
+    return res.status(401).json({
       message: "Invalid or expired token.",
     });
   }
@@ -479,6 +483,175 @@ app.post("/api/engagements", authenticateToken, async (req, res) => {
     res.status(201).json(populatedEngagement);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// ======================================================
+// FILE UPLOAD APIs
+// ======================================================
+
+const MAX_UPLOAD_SIZE = 2 * 1024 * 1024; // 2 MB
+
+// Keep the file in memory; it is saved to MongoDB after import.
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_UPLOAD_SIZE, files: 1 },
+  fileFilter: (req, file, callback) => {
+    if (/.csv$/i.test(file.originalname)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Only .csv files are allowed"));
+    }
+  },
+});
+
+// Run multer and turn its errors into 400 responses
+const handleCsvUpload = (req, res, next) => {
+  csvUpload.single("file")(req, res, (error) => {
+    if (!error) {
+      return next();
+    }
+
+    const message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "File must be 2 MB or smaller"
+        : error.message;
+
+    res.status(400).json({ message });
+  });
+};
+
+// Data sent to the client for an upload (never the file contents)
+const formatUpload = (upload) => ({
+  id: upload._id,
+  originalName: upload.originalName,
+  size: upload.size,
+  rowCount: upload.rowCount,
+  importedCount: upload.importedCount,
+  skippedCount: upload.skippedCount,
+  uploadedBy: upload.uploadedBy,
+  createdAt: upload.createdAt,
+});
+
+// UPLOAD a CSV file and import its rows as engagements (JWT protected)
+app.post(
+  "/api/uploads",
+  authenticateToken,
+  handleCsvUpload,
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Please choose a CSV file to upload",
+        });
+      }
+
+      let rows;
+
+      try {
+        rows = parseCsv(req.file.buffer);
+      } catch (error) {
+        return res.status(400).json({
+          message: `Could not read the CSV file: ${error.message}`,
+        });
+      }
+
+      const result = await importEngagementRows(rows);
+
+      const upload = await Upload.create({
+        originalName: req.file.originalname,
+        // Only .csv files pass the filter; browsers report various types
+        mimeType: "text/csv",
+        size: req.file.size,
+        data: req.file.buffer,
+        uploadedBy: req.user.id,
+        rowCount: result.rowCount,
+        importedCount: result.imported,
+        skippedCount: result.skipped,
+      });
+
+      await upload.populate("uploadedBy", "name username");
+
+      res.status(201).json({
+        message: `Imported ${result.imported} of ${result.rowCount} rows`,
+        upload: formatUpload(upload),
+        imported: result.imported,
+        skipped: result.skipped,
+        errors: result.errors,
+      });
+    } catch (error) {
+      console.error("Upload error:", error.message);
+      res.status(500).json({ message: "Upload failed" });
+    }
+  }
+);
+
+// GET all uploads, newest first (JWT protected)
+app.get("/api/uploads", authenticateToken, async (req, res) => {
+  try {
+    const uploads = await Upload.find()
+      .sort({ createdAt: -1 })
+      .populate("uploadedBy", "name username");
+
+    res.status(200).json(uploads.map(formatUpload));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DOWNLOAD the original file (JWT protected)
+app.get(
+  "/api/uploads/:id/download",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid upload ID" });
+      }
+
+      const upload = await Upload.findById(req.params.id).select("+data");
+
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+
+      res.attachment(upload.originalName);
+      res.type(upload.mimeType);
+      res.send(upload.data);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+// DELETE an upload - only the uploader or an admin (JWT protected)
+app.delete("/api/uploads/:id", authenticateToken, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "Invalid upload ID" });
+    }
+
+    const upload = await Upload.findById(req.params.id);
+
+    if (!upload) {
+      return res.status(404).json({ message: "Upload not found" });
+    }
+
+    if (
+      String(upload.uploadedBy) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "You can only delete your own uploads",
+      });
+    }
+
+    await upload.deleteOne();
+
+    // Imported engagement records are kept.
+    res.status(200).json({ message: "Upload deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 

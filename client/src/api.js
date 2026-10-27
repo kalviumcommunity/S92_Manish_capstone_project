@@ -46,10 +46,8 @@ export const apiFetch = async (path, options = {}) => {
   const data = await response.json().catch(() => ({}));
 
   // Expired or invalid token: sign the user out.
-  if (
-    (response.status === 401 || response.status === 403) &&
-    localStorage.getItem("token")
-  ) {
+  // (403 means "not allowed", so the user stays signed in.)
+  if (response.status === 401 && localStorage.getItem("token")) {
     clearLogin();
   }
 
