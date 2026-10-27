@@ -1,0 +1,92 @@
+name: Deploy to Netlify
+
+# Deploys the React app and the API function to Netlify on every push to main,
+# after the server tests pass. Can also be started by hand from the Actions tab.
+#
+# Needs (repository Settings → Secrets and variables → Actions):
+#   secret   NETLIFY_AUTH_TOKEN  Netlify personal access token
+#   variable NETLIFY_SITE_ID     the Netlify site's ID
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at the same time
+concurrency:
+  group: netlify-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Server tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    name: Deploy to Netlify
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+    steps:
+      - name: Check Netlify settings
+        id: settings
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "::warning::NETLIFY_AUTH_TOKEN secret or NETLIFY_SITE_ID variable is missing; skipping deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.settings.outputs.ready == 'true'
+
+      # netlify-cli needs Node 22+
+      - uses: actions/setup-node@v4
+        if: steps.settings.outputs.ready == 'true'
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        if: steps.settings.outputs.ready == 'true'
+        run: |
+          npm ci --prefix server --omit=dev
+          npm ci --prefix client
+
+      # The API runs on the same site, so the app calls /api/... directly
+      - name: Build the React app
+        if: steps.settings.outputs.ready == 'true'
+        run: npm run build --prefix client
+        env:
+          VITE_API_URL: /
+
+      - name: Deploy
+        if: steps.settings.outputs.ready == 'true'
+        run: >
+          npx --yes netlify-cli@26 deploy
+          --prod
+          --no-build
+          --dir client/dist
+          --functions server/functions
+          --site "$NETLIFY_SITE_ID"
+          --message "GitHub Actions: ${{ github.sha }}"
+
+      - name: Check the live API
+        if: steps.settings.outputs.ready == 'true'
+        run: |
+          sleep 10
+          curl --fail --silent --show-error https://community-connect-s92.netlify.app/api/health
