@@ -437,7 +437,7 @@ app.put("/api/programs/:id", authenticateToken, async (req, res) => {
     const updatedProgram = await Program.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!updatedProgram) {

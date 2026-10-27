@@ -151,7 +151,7 @@ const importRow = async (row, programCache) => {
     { $set: engagementData },
     {
       upsert: true,
-      new: true,
+      returnDocument: "after",
       runValidators: true,
       setDefaultsOnInsert: true,
     }
