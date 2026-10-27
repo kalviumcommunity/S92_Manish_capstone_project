@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_URL, apiFetch, authHeaders } from "./api";
+import { downloadBlob, downloadCsv } from "./download";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // must match the server limit
 
@@ -38,19 +39,6 @@ const TEMPLATE_ROWS = [
 
 const formatSize = (bytes) =>
   bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
-
-// Let the browser save a Blob as a file
-const saveBlob = (blob, fileName) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = fileName;
-  link.click();
-
-  // Give the browser time to start the download first
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
 
 function UploadData() {
   const [file, setFile] = useState(null);
@@ -159,7 +147,7 @@ function UploadData() {
         throw new Error("Download failed");
       }
 
-      saveBlob(await response.blob(), upload.originalName);
+      downloadBlob(await response.blob(), upload.originalName);
     } catch (downloadError) {
       alert(downloadError.message);
     }
@@ -188,14 +176,7 @@ function UploadData() {
   };
 
   const handleDownloadTemplate = () => {
-    const csv = TEMPLATE_ROWS.map((row) =>
-      row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-
-    saveBlob(
-      new Blob([csv], { type: "text/csv" }),
-      "community-connect-template.csv"
-    );
+    downloadCsv("community-connect-template.csv", TEMPLATE_ROWS);
   };
 
   return (

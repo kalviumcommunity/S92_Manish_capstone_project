@@ -4218,3 +4218,19 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   STATUS BADGES (UPCOMING / INACTIVE)
+========================================================= */
+
+.status.upcoming {
+  background: #eff6ff;
+
+  color: #1d4ed8;
+}
+
+.status.inactive {
+  background: #fef2f2;
+
+  color: #b91c1c;
+}
