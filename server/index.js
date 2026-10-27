@@ -497,7 +497,7 @@ const csvUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_UPLOAD_SIZE, files: 1 },
   fileFilter: (req, file, callback) => {
-    if (/.csv$/i.test(file.originalname)) {
+    if (/\.csv$/i.test(file.originalname)) {
       callback(null, true);
     } else {
       callback(new Error("Only .csv files are allowed"));
