@@ -24,6 +24,7 @@ Optional settings go in a `.env` file next to `docker-compose.yml`:
 ```
 JWT_SECRET=a-long-random-string
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
 ## Stop
