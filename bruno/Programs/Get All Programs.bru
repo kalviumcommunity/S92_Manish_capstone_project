@@ -1,0 +1,33 @@
+meta {
+  name: Get All Programs
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/programs
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns an array", function () {
+    expect(res.body).to.be.an("array");
+  });
+}
+
+docs {
+  Lists all programs.
+
+  **Auth:** Bearer token
+
+  **Response 200:** array of programs
+}

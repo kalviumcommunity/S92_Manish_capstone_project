@@ -1,0 +1,41 @@
+meta {
+  name: Get All Users
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  if (Array.isArray(res.body) && res.body.length > 0) {
+    bru.setVar("userId", res.body[0]._id);
+  }
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("never returns passwords", function () {
+    res.body.forEach(function (user) {
+      expect(user.password).to.be.undefined;
+    });
+  });
+}
+
+docs {
+  Lists all users. Passwords are never returned.
+
+  **Auth:** Bearer token
+
+  **Response 200:** array of users
+}

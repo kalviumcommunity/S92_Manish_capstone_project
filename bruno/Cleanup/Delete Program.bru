@@ -1,0 +1,32 @@
+meta {
+  name: Delete Program
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/api/programs/{{programId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Deletes a program.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 `{ "message": "Program deleted successfully" }`
+  - 400 invalid ID
+  - 404 program not found
+}

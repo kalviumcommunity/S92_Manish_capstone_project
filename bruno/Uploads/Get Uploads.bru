@@ -1,0 +1,27 @@
+meta {
+  name: Get Uploads
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/uploads
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+}
+
+docs {
+  Lists uploaded files, newest first (file contents are not included).
+
+  **Auth:** Bearer token
+}

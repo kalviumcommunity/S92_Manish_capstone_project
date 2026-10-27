@@ -1,0 +1,36 @@
+meta {
+  name: Download Upload
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/uploads/{{uploadId}}/download
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns the CSV file", function () {
+    expect(res.headers["content-type"]).to.contain("text/csv");
+  });
+}
+
+docs {
+  Downloads the original uploaded file.
+
+  **Auth:** Bearer token
+
+  **Responses**
+  - 200 the file (`Content-Disposition: attachment`)
+  - 400 invalid ID
+  - 404 upload not found
+}
